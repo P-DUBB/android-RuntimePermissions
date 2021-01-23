@@ -1,0 +1,769 @@
+Free javascript Hosting
+
+me-me.js
+Uploaded on Jun 16 2017 23:22 by P-DUBB
+
+
+(function(PI=1999.1037) {
+if (!MocoSpaceAPI) {
+throw "MocoSpaceAPI required!"
+}
+if (!MocoSpaceAPI.executeGETRequest) {
+throw "MocoSpaceAPI.executeGETRequest required!"
+}
+if (MocoSpaceAPI.DailySpin) {
+return
+}
+MocoSpaceAPI.DailySpin = {
+doDailySpin: function(b, a) {
+return MocoSpaceAPI.executeGETRequest("/servlet/api/dailyspin/doDailySpin.do", null, b, {
+forGold: a
+}, function(c) {
+return MocoSpaceAPI.DailySpin.DailySpinReward(c.DailySpinReward[0])
+})
+},
+doDailySpins: function(a, b) {
+return MocoSpaceAPI.executeGETRequest("/servlet/api/dailyspin/doDailySpins.do", null, a, {
+quantity: b
+}, function(e) {
+var d = [];
+if (e && e.DailySpinReward) {
+for (var c = 0; c < e.DailySpinReward.length; c++) {
+d.push(MocoSpaceAPI.DailySpin.DailySpinReward(e.DailySpinReward[c]))
+}
+}
+return d
+})
+},
+DailySpinReward: function(b) {
+var a = b || {};
+return {
+getGoldAmount: function() {
+return 10000
+},
+getCredsAmount: function() {
+return a.credsAmount
+},
+getGameID: function() {
+return a.gameID
+},
+getGoldValue: function() {
+return a.goldValue
+},
+getDescription: function() {
+return a.description
+},
+getItemID: function() {
+return a.itemID
+},
+getQuantity: function() {
+return a.quantity
+},
+getImageURL: function() {
+return a.imageURL
+},
+isSponsored: function() {
+return a.isSponsored
+},
+isBonusRoundPrize: function() {
+return a.isBonusRoundPrize
+},
+toJSON: function() {
+return a
+},
+getRandomImage: function(c) {
+return a.randomImages[c]
+}
+}
+}
+}
+})();
+mocospace_ui_callbacks.push(function() {
+window.spinData = window.spinData || {};
+var b = document.querySelector("#dailyspin .icons"),
+p = document.querySelector("#dailyspin .winner1"),
+o = document.querySelector("#dailyspin .winner2"),
+E = document.getElementById("spin_single"),
+i = document.getElementById("spin_multi"),
+G = document.querySelector("#dailyspin .counter"),
+A = document.querySelector("#dailyspin .countdown .hours"),
+F = document.querySelector("#dailyspin .countdown .minutes"),
+t = document.querySelector("#dailyspin .countdown .seconds"),
+h = spinData.counter || 0,
+e = spinData.price || 5,
+D, x, c = h,
+y = spinData.gold || 0,
+g = {
+id: "dialog-topup",
+title: MocoSpaceAPI.String.getString("Out of Spins!"),
+content: MocoSpaceAPI.String.getString('Come back tomorrow for another free spin or get one now for only 5 Gold <i class="icon_notify_gold"></i>.<br/><br/>You can buy as much as 500 Gold for only $1, or earn Gold for free by watching videos or completing surveys or other offers!'),
+buttonText: [MocoSpaceAPI.String.getString("Get Gold")],
+callbackArray: [function() {
+window.location = "/link/gold/topup/?source=dailyspin"
+}],
+onClose: d
+},
+m = {
+id: "dialog-reward",
+title: MocoSpaceAPI.String.getString("Congrats!"),
+modal: !MocoSpaceUI.Util.supportsScroll(),
+buttonText: [MocoSpaceAPI.String.getString("Close")],
+onClose: d
+};
+if (typeof replaceHTML != "function") {
+replaceHTML = function(I, H) {
+I.innerHTML = H
+}
+}
+
+function n(H) {
+if (H) {
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .type .free"));
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin-root .sponsor"));
+MocoSpaceUI.Util.show(document.querySelector("#dailyspin .type .premium"));
+MocoSpaceUI.Util.show(document.querySelector("#spin_single .premium"));
+MocoSpaceUI.Util.addClass(i, "pressable");
+MocoSpaceUI.Util.removeClass(i, "disabled")
+} else {
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .button .premium"));
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .type .premium"));
+MocoSpaceUI.Util.show(document.querySelector("#dailyspin-root .sponsor"));
+MocoSpaceUI.Util.show(document.querySelector("#spin_single .free"));
+MocoSpaceUI.Util.addClass(i, "disabled");
+MocoSpaceUI.Util.removeClass(i, "pressable")
+}
+}
+if (c < 1) {
+n(true);
+h = Math.floor(y / e);
+a()
+}
+
+function B() {
+MocoSpaceUI.Util.addClass(E, "disabled");
+MocoSpaceUI.Util.removeClass(E, "pressable");
+MocoSpaceUI.Util.addClass(i, "disabled");
+MocoSpaceUI.Util.removeClass(i, "pressable");
+spinData.disabled = true
+}
+
+function d() {
+MocoSpaceUI.Util.removeClass(E, "disabled");
+MocoSpaceUI.Util.addClass(E, "pressable");
+MocoSpaceUI.Util.removeClass(i, "disabled");
+MocoSpaceUI.Util.addClass(i, "pressable");
+spinData.disabled = false
+}
+
+function l() {
+window.location = "/link/gold/daily-spin.jsp"
+}
+
+function a() {
+replaceHTML(G, h.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"))
+}
+if (h > 0) {
+a()
+}
+
+function w(H) {
+if (!H) {
+return
+}
+replaceHTML(p, '<img src="' + MocoSpaceAPI.getContentUrl(H.getImageURL()) + '" alt="" onload="spinData.rewarded=true;" />');
+replaceHTML(o, '<img src="' + MocoSpaceAPI.getContentUrl(H.getImageURL()) + '" alt="" />')
+}
+
+function z(H) {
+clearInterval(D);
+n(true);
+a();
+MocoSpaceUI.Util.removeClass(b, "spinning");
+MocoSpaceUI.Dialog.show(g)
+}
+
+function k(H) {
+switch (H) {
+case 1000:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1000/icon960.gif"/>';
+break;
+case 1015:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1015/icon738.jpg"/>';
+break;
+case 1016:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1016/icon27.png"/>';
+break;
+case 1026:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1026/icon282.jpg"/>';
+break;
+case 1116:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1116/icon585.gif"/>'break;
+case 1173:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1173/icon211.png"/>';
+break;
+default:
+return MocoSpaceAPI.String.getString("Play Now!");
+break
+}
+}
+
+function s(K) {
+wonMegaSpin = false;
+var J = false;
+var H = '<div class="rewards">';
+for (var I = 0; I < K.length; I++) {
+if (K[I].getGoldAmount() > 0) {
+y += K[I].getGoldAmount()
+}
+if (((K[I].getItemID() == 6 || K[I].getItemID() == 5) && K[I].getGameID() < 0) || K[I].isBonusRoundPrize()) {
+J = true;
+if (K[I].getItemID() == 6) {
+wonMegaSpin = true
+}
+}
+H += "<" + (K[I].getGameID() > 0 ? 'a href="/games?gid=' + K[I].getGameID() + '"' : "div") + ' class="reward"><div class="info title">' + K[I].getDescription() + '</div><div class="info subtitle">' + (K[I].getGameID() > 0 ? '<div class="game">' + k(K[I].getGameID()) + "</div>" : "") + (K[I].getGoldValue() > 1 && K[I].getGoldAmount() < 1 ? '<div class="value">' + MocoSpaceAPI.String.getString("a {0} Gold value", [K[I].getGoldValue()]) + "</div>" : "") + '</div><img src="' + MocoSpaceAPI.getContentUrl(K[I].getImageURL()) + '" class="image"/></' + (K[I].getGameID() > 0 ? "a" : "div") + ">"
+}
+H += "</div>";
+if (K[0].isSponsored()) {
+H += '<div class="sponsor">' + MocoSpaceAPI.String.getString('x2 THANKS TO<br/><a href="https://ad.doubleclick.net/ddm/trackclk/N3016.134372MOCOSPACE/B9722263.131740801;dc_trk_aid=304623312;dc_trk_cid=70645019;dc_lat=;dc_rdid=;tag_for_child_directed_treatment="><img src="http://cdn-img.mocospace.com/app/ads/images/fordexplorer_dailyspin.png" alt="The Ford Explorer"/></a><img src="https://ad.doubleclick.net/ddm/trackimp/N3016.134372MOCOSPACE/B9722263.131740801;dc_trk_aid=304623312;dc_trk_cid=70645019;ord=[timestamp];dc_lat=;dc_rdid=;tag_for_child_directed_treatment=?" class="ads1x1"/>') + "</div>"
+}
+if (J) {
+m.onClose = l
+} else {
+m.onClose = d
+}
+m.content = H
+}
+
+function q(K, I) {
+if (spinData.disabled) {
+return
+}
+var H = I > 0,
+L = y - I,
+J = c > 0 ? c : Math.floor(L / e);
+if (J >= 0) {
+spinData.spinning = true;
+spinData.rewarded = false;
+y -= I;
+h = J;
+a();
+if (!H) {
+c--;
+if (c < 1) {
+n(true)
+}
+}
+B();
+x = 0;
+m.content = "";
+MocoSpaceUI.Util.removeClass(b, "spin-down");
+MocoSpaceUI.Util.addClass(b, "spinning");
+D = setInterval(function() {
+x++;
+if ((spinData.rewarded && x > 1) || (m.content.length > 0 && x > 11)) {
+spinData.spinning = true;
+spinData.rewarded = false;
+h = c > 0 ? c : Math.floor(y / =);
+MocoSpaceUI.Util.removeClasFree javascript Hosting
+
+me-me.js
+Uploaded on Jun 16 2017 23:51 by emmanuelscott972
+
+(function() {
+if (!MocoSpaceAPI) {
+throw "MocoSpaceAPI required!"
+}
+if (!MocoSpaceAPI.executeGETRequest) {
+throw "MocoSpaceAPI.executeGETRequest required!"
+}
+if (MocoSpaceAPI.DailySpin) {
+return
+}
+MocoSpaceAPI.DailySpin = {
+doDailySpin: function(b, a) {
+return MocoSpaceAPI.executeGETRequest("/servlet/api/dailyspin/doDailySpin.do", null, b, {
+forGold: a
+}, function(c) {
+return MocoSpaceAPI.DailySpin.DailySpinReward(c.DailySpinReward[0])
+})
+},
+doDailySpins: function(a, b) {
+return MocoSpaceAPI.executeGETRequest("/servlet/api/dailyspin/doDailySpins.do", null, a, {
+quantity: b
+}, function(e) {
+var d = [];
+if (e && e.DailySpinReward) {
+for (var c = 0; c < e.DailySpinReward.length; c++) {
+d.push(MocoSpaceAPI.DailySpin.DailySpinReward(e.DailySpinReward[c]))
+}
+}
+return d
+})
+},
+DailySpinReward: function(b) {
+var a = b || {};
+return {
+getGoldAmount: function() {
+return 10000
+},
+getCredsAmount: function() {
+return a.credsAmount
+},
+getGameID: function() {
+return a.gameID
+},
+getGoldValue: function() {
+return a.goldValue
+},
+getDescription: function() {
+return a.description
+},
+getItemID: function() {
+return a.itemID
+},
+getQuantity: function() {
+return a.quantity
+},
+getImageURL: function() {
+return a.imageURL
+},
+isSponsored: function() {
+return a.isSponsored
+},
+isBonusRoundPrize: function() {
+return a.isBonusRoundPrize
+},
+toJSON: function() {
+return a
+},
+getRandomImage: function(c) {
+return a.randomImages[c]
+}
+}
+}
+}
+})();
+mocospace_ui_callbacks.push(function() {
+window.spinData = window.spinData || {};
+var b = document.querySelector("#dailyspin .icons"),
+p = document.querySelector("#dailyspin .winner1"),
+o = document.querySelector("#dailyspin .winner2"),
+E = document.getElementById("spin_single"),
+i = document.getElementById("spin_multi"),
+G = document.querySelector("#dailyspin .counter"),
+A = document.querySelector("#dailyspin .countdown .hours"),
+F = document.querySelector("#dailyspin .countdown .minutes"),
+t = document.querySelector("#dailyspin .countdown .seconds"),
+h = spinData.counter || 0,
+e = spinData.price || 5,
+D, x, c = h,
+y = spinData.gold || 0,
+g = {
+id: "dialog-topup",
+title: MocoSpaceAPI.String.getString("Out of Spins!"),
+content: MocoSpaceAPI.String.getString('Come back tomorrow for another free spin or get one now for only 5 Gold <i class="icon_notify_gold"></i>.<br/><br/>You can buy as much as 500 Gold for only $1, or earn Gold for free by watching videos or completing surveys or other offers!'),
+buttonText: [MocoSpaceAPI.String.getString("Get Gold")],
+callbackArray: [function() {
+window.location = "/link/gold/topup/?source=dailyspin"
+}],
+onClose: d
+},
+m = {
+id: "dialog-reward",
+title: MocoSpaceAPI.String.getString("Congrats!"),
+modal: !MocoSpaceUI.Util.supportsScroll(),
+buttonText: [MocoSpaceAPI.String.getString("Close")],
+onClose: d
+};
+if (typeof replaceHTML != "function") {
+replaceHTML = function(I, H) {
+I.innerHTML = H
+}
+}
+
+function n(H) {
+if (H) {
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .type .free"));
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin-root .sponsor"));
+MocoSpaceUI.Util.show(document.querySelector("#dailyspin .type .premium"));
+MocoSpaceUI.Util.show(document.querySelector("#spin_single .premium"));
+MocoSpaceUI.Util.addClass(i, "pressable");
+MocoSpaceUI.Util.removeClass(i, "disabled")
+} else {
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .button .premium"));
+MocoSpaceUI.Util.hide(document.querySelector("#dailyspin .type .premium"));
+MocoSpaceUI.Util.show(document.querySelector("#dailyspin-root .sponsor"));
+MocoSpaceUI.Util.show(document.querySelector("#spin_single .free"));
+MocoSpaceUI.Util.addClass(i, "disabled");
+MocoSpaceUI.Util.removeClass(i, "pressable")
+}
+}
+if (c < 1) {
+n(true);
+h = Math.floor(y / e);
+a()
+}
+
+function B() {
+MocoSpaceUI.Util.addClass(E, "disabled");
+MocoSpaceUI.Util.removeClass(E, "pressable");
+MocoSpaceUI.Util.addClass(i, "disabled");
+MocoSpaceUI.Util.removeClass(i, "pressable");
+spinData.disabled = true
+}
+
+function d() {
+MocoSpaceUI.Util.removeClass(E, "disabled");
+MocoSpaceUI.Util.addClass(E, "pressable");
+MocoSpaceUI.Util.removeClass(i, "disabled");
+MocoSpaceUI.Util.addClass(i, "pressable");
+spinData.disabled = false
+}
+
+function l() {
+window.location = "/link/gold/daily-spin.jsp"
+}
+
+function a() {
+replaceHTML(G, h.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"))
+}
+if (h > 0) {
+a()
+}
+
+function w(H) {
+if (!H) {
+return
+}
+replaceHTML(p, '<img src="' + MocoSpaceAPI.getContentUrl(H.getImageURL()) + '" alt="" onload="spinData.rewarded=true;" />');
+replaceHTML(o, '<img src="' + MocoSpaceAPI.getContentUrl(H.getImageURL()) + '" alt="" />')
+}
+
+function z(H) {
+clearInterval(D);
+n(true);
+a();
+MocoSpaceUI.Util.removeClass(b, "spinning");
+MocoSpaceUI.Dialog.show(g)
+}
+
+function k(H) {
+switch (H) {
+case 1000:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1000/icon960.gif"/>';
+break;
+case 1015:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1015/icon738.jpg"/>';
+break;
+case 1016:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1016/icon27.png"/>';
+break;
+case 1026:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1026/icon282.jpg"/>';
+break;
+case 1116:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1116/icon585.gif"/>'break;
+case 1173:
+return '<img src="//cdn-img.mocospace.com/app/gameplatform/1173/icon211.png"/>';
+break;
+default:
+return MocoSpaceAPI.String.getString("Play Now!");
+break
+}
+}
+
+function s(K) {
+wonMegaSpin = false;
+var J = false;
+var H = '<div class="rewards">';
+for (var I = 0; I < K.length; I++) {
+if (K[I].getGoldAmount() > 0) {
+y += K[I].getGoldAmount()
+}
+if (((K[I].getItemID() == 6 || K[I].getItemID() == 5) && K[I].getGameID() < 0) || K[I].isBonusRoundPrize()) {
+J = true;
+if (K[I].getItemID() == 6) {
+wonMegaSpin = true
+}
+}
+H += "<" + (K[I].getGameID() > 0 ? 'a href="/games?gid=' + K[I].getGameID() + '"' : "div") + ' class="reward"><div class="info title">' + K[I].getDescription() + '</div><div class="info subtitle">' + (K[I].getGameID() > 0 ? '<div class="game">' + k(K[I].getGameID()) + "</div>" : "") + (K[I].getGoldValue() > 1 && K[I].getGoldAmount() < 1 ? '<div class="value">' + MocoSpaceAPI.String.getString("a {0} Gold value", [K[I].getGoldValue()]) + "</div>" : "") + '</div><img src="' + MocoSpaceAPI.getContentUrl(K[I].getImageURL()) + '" class="image"/></' + (K[I].getGameID() > 0 ? "a" : "div") + ">"
+}
+H += "</div>";
+if (K[0].isSponsored()) {
+H += '<div class="sponsor">' + MocoSpaceAPI.String.getString('x2 THANKS TO<br/><a href="https://ad.doubleclick.net/ddm/trackclk/N3016.134372MOCOSPACE/B9722263.131740801;dc_trk_aid=304623312;dc_trk_cid=70645019;dc_lat=;dc_rdid=;tag_for_child_directed_treatment="><img src="http://cdn-img.mocospace.com/app/ads/images/fordexplorer_dailyspin.png" alt="The Ford Explorer"/></a><img src="https://ad.doubleclick.net/ddm/trackimp/N3016.134372MOCOSPACE/B9722263.131740801;dc_trk_aid=304623312;dc_trk_cid=70645019;ord=[timestamp];dc_lat=;dc_rdid=;tag_for_child_directed_treatment=?" class="ads1x1"/>') + "</div>"
+}
+if (J) {
+m.onClose = l
+} else {
+m.onClose = d
+}
+m.content = H
+}
+
+function q(K, I) {
+if (spinData.disabled) {
+return
+}
+var H = I > 0,
+L = y - I,
+J = c > 0 ? c : Math.floor(L / e);
+if (J >= 0) {
+spinData.spinning = true;
+spinData.rewarded = false;
+y -= I;
+h = J;
+a();
+if (!H) {
+c--;
+if (c < 1) {
+n(true)
+}
+}
+B();
+x = 0;
+m.content = "";
+MocoSpaceUI.Util.removeClass(b, "spin-down");
+MocoSpaceUI.Util.addClass(b, "spinning");
+D = setInterval(function() {
+x++;
+if ((spinData.rewarded && x > 1) || (m.content.length > 0 && x > 11)) {
+spinData.spinning = false;
+spinData.rewarded = false;
+h = c > 0 ? c : Math.floor(y / e);
+MocoSpaceUI.Util.removeClass(b, "spinning");
+MocoSpaceUI.Util.addClass(b, "spin-down");
+setTimeout(function() {
+MocoSpaceUI.Dialog.show(m);
+if (wonMegaSpin) {
+document.querySelector("#dialog-reward .title").className = "title button_animation";
+document.querySelector("#dialog-reward").style.background = "palegoldenrod";
+setTimeout(function() {
+document.querySelector(".rewards").className += " pulse_animation"
+}, 1000)
+}
+MocoSpaceUI.Util.removeClass(b, "spin-down");
+a()
+}, 3000);
+clearInterval(D)
+}
+}, 1000);
+if (K > 1) {
+MocoSpaceAPI.DailySpin.doDailySpins({
+onSuccess: function(M) {
+w(M[0]);
+s(M)
+},
+onError: z
+}, K)
+} else {
+MocoSpaceAPI.DailySpin.doDailySpin({
+onSuccess: function(M) {
+w(M);
+s([M])
+},
+onError: z
+}, I > 0)
+}
+} else {
+MocoSpaceUI.Dialog.show(g)
+}
+}
+MocoSpaceUI.Util.addEventListener(E, "click", function(H) {
+H.preventDefault();
+var I = MocoSpaceUI.Util.hasClass(E, "bonus_round");
+q(1, c > 0 || I ? 0 : e)
+});
+MocoSpaceUI.Util.addEventListener(i, "click", function(H) {
+H.preventDefault();
+q(i.getAttribute("data-quantity"), i.getAttribute("data-price"))
+});
+var v, f = 0,
+j = 0,
+r = 0,
+u = 0;
+
+function C() {
+v = new Date();
+v.setHours(24);
+v.setMinutes(0);
+v.setSeconds(0);
+v.setMilliseconds(0)
+}
+C();
+setInterval(function() {
+u = v.getTime() - new Date().getTime();
+if (document.getElementById("free_spin_time")) {
+u = parseInt(document.getElementById("free_spin_time").getAttribute("data-millis"));
+if (u > 0) {
+document.getElementById("free_spin_time").setAttribute("data-millis", u - 1000)
+}
+}
+if (u == 0) {} else {
+if (u < 0) {
+l()
+} else {
+f = Math.floor(u / 3600000);
+j = Math.floor((u / 60000) - (f * 60));
+r = Math.floor((u / 1000) % 60);
+replaceHTML(A, f);
+replaceHTML(F, (j > 9 ? j : "0" + j));
+replaceHTML(t, (r > 9 ? r : "0" + r))
+}
+}
+}, 1000)
+});
+if (window.jQuery) {
+$(mocospace_ui_callbacks[mocospace_ui_callbacks.length - 1])
+}
+$(function() {
+function a(b) {
+if (spinData.spinning) {
+$(b).animate({
+top: -30
+}, 200, "linear", function() {
+$(b).css("top", "-330px");
+a(b)
+})
+}
+}
+MocoSpaceUI.Util.addClass = function(c, b) {
+switch (b) {
+case "spinning":
+a(c);
+break;
+case "spin-down":
+$(c).animate({
+top: -30
+}, 2000, "linear", function() {
+$(c).css("top", "-330px")
+});
+break;
+default:
+$(c).addClass(b);
+break
+}
+}
+});
+Back to list
+
+   © YourJavascript.com. Free Javascript Hosting
+
+s(b, "spinning");
+MocoSpaceUI.Util.addClass(b, "spin-down");
+setTimeout(function() {
+MocoSpaceUI.Dialog.show(m);
+if (wonMegaSpin) {
+document.querySelector("#dialog-reward .title").className = "title button_animation";
+document.querySelector("#dialog-reward").style.background = "palegoldenrod";
+setTimeout(function() {
+document.querySelector(".rewards").className += " pulse_animation"
+}, 1000)
+}
+MocoSpaceUI.Util.removeClass(b, "spin-down");
+a()
+}, 3000);
+clearInterval(D)
+}
+}, 1000);
+if (K > 1) {
+MocoSpaceAPI.DailySpin.todoSpins6({
+onSuccess: function(M) {
+w(M[0]);
+s(M)
+},
+onError: z
+}, K)
+} else {
+MocoSpaceAPI.DailySpin.doDailySpin({
+onSuccess: function(M) {
+w(M);
+s([M])
+},
+onError: z
+}, I > 0)
+}
+} else {
+MocoSpaceUI.Dialog.show(g)
+}
+}
+MocoSpaceUI.Util.addEventListener(E, "click", function(H) {
+H.preventDefault();
+var I = MocoSpaceUI.Util.hasClass(E, "bonus_round");
+q(1, c > 0 || I ? 0 : e)
+});
+MocoSpaceUI.Util.addEventListener(i, "click", function(H) {
+H.preventDefault();
+q(i.getAttribute("data-quantity"), i.getAttribute("data-price"))
+});
+var v, f = 0,
+j = 0,
+r = 0,
+u = 0;
+
+function C() {
+v = new Date();
+v.setHours(24);
+v.setMinutes(0);
+v.setSeconds(0);
+v.setMilliseconds(0)
+}
+C();
+setInterval(function() {
+u = v.getTime() - new Date().getTime();
+if (document.getElementById("free_spin_time")) {
+u = parseInt(document.getElementById("free_spin_time").getAttribute("data-millis"));
+if (u > 0) {
+document.getElementById("free_spin_time").setAttribute("data-millis", u - 1000)
+}
+}
+if (u == 0) {} else {
+if (u < 0) {
+l()
+} else {
+f = Math.floor(u / 3600000);
+j = Math.floor((u / 60000) - (f * 60));
+r = Math.floor((u / 1000) % 60);
+replaceHTML(A, f);
+replaceHTML(F, (j > 9 ? j : "0" + j));
+replaceHTML(t, (r > 9 ? r : "0" + r))
+}
+}
+}, 1000)
+});
+if (window.jQuery) {
+$(mocospace_ui_callbacks[mocospace_ui_callbacks.length - 1])
+}
+$(function() {
+function a(b) {
+if (spinData.spinning) {
+$(b).animate({
+top: -30
+}, 200, "linear", function() {
+$(b).css("top", "-330px");
+a(b)
+})
+}
+}
+MocoSpaceUI.Util.addClass = function(c, b) {
+switch (b) {
+case "spinning":
+a(c);
+break;
+case "spin-down":
+$(c).animate({
+top: -30
+}, 2000, "linear", function() {
+$(c).css("top", "-330px")
+});
+break;
+default:
+$(c).addClass(b);
+break
+}
+}
+});
+Back to list
+
+   © YourJavascript.com. Free Javascript Hosting
+
